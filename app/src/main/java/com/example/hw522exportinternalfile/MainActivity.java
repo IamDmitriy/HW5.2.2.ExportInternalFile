@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String SHARED_PREF = "sharedPref";
     private static final String STATE_CHB_STORAGE_KEY = "stateChbStorage";
 
-    boolean stateChbStorage;
+    private boolean stateChbStorage;
     private EditText edtLogin;
     private EditText edtPassword;
     private SharedPreferences sharedPref;
