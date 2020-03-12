@@ -32,30 +32,26 @@ public class MainActivity extends AppCompatActivity {
     private static final String STATE_CHB_STORAGE_KEY = "stateChbStorage";
 
     boolean stateChbStorage;
-    private Button btnLogin;
-    private Button btnRegistration;
     private EditText edtLogin;
     private EditText edtPassword;
-    private CheckBox chbStorage;
     private SharedPreferences sharedPref;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         init();
     }
 
     private void init() {
         sharedPref = getSharedPreferences(SHARED_PREF, MODE_PRIVATE);
 
-        btnLogin = findViewById(R.id.btnLogin);
-        btnRegistration = findViewById(R.id.btnRegistration);
+        Button btnLogin = findViewById(R.id.btnLogin);
+        Button btnRegistration = findViewById(R.id.btnRegistration);
         edtLogin = findViewById(R.id.edtLogin);
         edtPassword = findViewById(R.id.edtPassword);
 
-        chbStorage = findViewById(R.id.chbStorage);
+        CheckBox chbStorage = findViewById(R.id.chbStorage);
         stateChbStorage = sharedPref.getBoolean(STATE_CHB_STORAGE_KEY, false);
         chbStorage.setChecked(stateChbStorage);
         chbStorage.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -116,39 +112,38 @@ public class MainActivity extends AppCompatActivity {
         File userDataFile = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_DOCUMENTS), FILE_NAME);
 
+
         FileReader fileReader = null;
         try {
             fileReader = new FileReader(userDataFile);
-        } catch (IOException e) {
-            showToast(getString(R.string.error));
-            e.printStackTrace();
-            return;
-        }
 
-        Scanner scanner = new Scanner(fileReader);
+            Scanner scanner = new Scanner(fileReader);
 
-        while (scanner.hasNextLine()) {
-            String line = scanner.nextLine();
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
 
-            String[] splitLine = line.split(";");
-            String curLogin = splitLine[0];
-            String curPassword = splitLine[1];
+                String[] splitLine = line.split(";");
+                String curLogin = splitLine[0];
+                String curPassword = splitLine[1];
 
-            if (curLogin.equals(login) && curPassword.equals(password)) {
-                showToast(getString(R.string.successful_login));
-                try {
+                if (curLogin.equals(login) && curPassword.equals(password)) {
+                    showToast(getString(R.string.successful_login));
+
                     fileReader.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return;
-            }
-        }
 
-        try {
-            fileReader.close();
+                    return;
+                }
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                assert fileReader != null;
+                fileReader.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         showToast(getString(R.string.error_user_not_found));
@@ -158,33 +153,26 @@ public class MainActivity extends AppCompatActivity {
         File userDataFile = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_DOCUMENTS), FILE_NAME);
 
+        String entry = login + ";" + password + "\n";
+
         FileWriter fileWriter = null;
         try {
             fileWriter = new FileWriter(userDataFile);
+
+            if (userDataFile.exists()) {
+                fileWriter.append(entry);
+            } else {
+                fileWriter.write(entry);
+            }
         } catch (IOException e) {
+            e.printStackTrace();
             showToast(getString(R.string.error));
-            e.printStackTrace();
-            return;
-        }
-
-        if (userDataFile.exists()) {
+        } finally {
             try {
-                fileWriter.append(login + ";" + password + "\n");
+                fileWriter.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        } else {
-            try {
-                fileWriter.write(login + ";" + password + "\n");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        try {
-            fileWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
         showToast(getString(R.string.successful_registration));
@@ -203,9 +191,6 @@ public class MainActivity extends AppCompatActivity {
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-        }
-
-        if (fileOutputStream == null) {
             showToast(getString(R.string.error_file_not_found));
             return;
         }
@@ -219,12 +204,12 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             showToast(getString(R.string.error));
             e.printStackTrace();
-        }
-
-        try {
-            bufferedWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } finally {
+            try {
+                bufferedWriter.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         showToast(getString(R.string.successful_registration));
@@ -245,41 +230,34 @@ public class MainActivity extends AppCompatActivity {
         }
 
         InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
-        BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+        BufferedReader bufferedReader = new BufferedReader(inputStreamReader); //Надо в любом случаи закрыть поток
 
-        String line = null;
         try {
-            line = bufferedReader.readLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        while (line != null) {
-            String[] splitLine = line.split(";");
-            String curLogin = splitLine[0];
-            String curPassword = splitLine[1];
+            String line = bufferedReader.readLine();
 
-            if (curLogin.equals(login) && curPassword.equals(password)) {
-                showToast(getString(R.string.successful_login));
-                try {
+            while (line != null) {
+                String[] splitLine = line.split(";");
+                String curLogin = splitLine[0];
+                String curPassword = splitLine[1];
+
+                if (curLogin.equals(login) && curPassword.equals(password)) {
+                    showToast(getString(R.string.successful_login));
                     bufferedReader.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    return;
                 }
-                return;
+
+                line = bufferedReader.readLine();
+
             }
 
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
             try {
-                line = bufferedReader.readLine();
+                bufferedReader.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-        }
-
-        try {
-            bufferedReader.close();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
         showToast(getString(R.string.error_user_not_found));
